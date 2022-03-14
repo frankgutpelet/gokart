@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<link rel="stylesheet" style="text/css">
+<meta content="de" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Embedded Template</title>
+<style type="text/css">
+	.button {
+	  display: inline-block;
+	  padding: 15px 20px;
+	  font-size: 20px;
+	  cursor: pointer;
+	  text-align: center;
+	  text-decoration: none;
+	  outline: none;
+	  color: #fff;
+	  background-color: silver;
+	  border: none;
+	  border-radius: 10px;
+	  box-shadow: 0 9px black;
+	}
+</style>
+
+<body>
+	<h1>Embedded Template</h1>
+	<table style="width: 100%">
+		<tr>
+			<td><strong>From c++: </strong></td>
+			<td><strong id="dynamicVariable"></strong></td>
+		</tr>
+		<tr>
+			<td><strong>To c++: </strong></td>
+			<td><input type="text" id="dynamicVariable2"onchange="updateDynamicVariable2()"></strong></td>
+			<td>
+				<form action="submit" method="post" >
+					<button class="button" id="submitBtn" type="submit" name="action" value="" >übernehmen</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>
+
+<script>
+	var values =
+	{
+		"dynamicVariable" : "dynamic",
+		"dynamicVariable2" : "dynamic"
+	}
+
+	document.getElementById("dynamicVariable").innerHTML = values.dynamicVariable
+	interval = setInterval(updateValues, 1000)
+
+	function updateDynamicVariable2()
+	{
+		values.dynamicVariable2 = document.getElementById("dynamicVariable2").value
+		document.getElementById("submitBtn").value = JSON.stringify(values)
+	}
+
+	function updateValues()
+	{
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function(){
+			pairs = this.responseText.split(";");
+			for(let i = 0; i < pairs.length; i++)
+			{
+				pair = pairs[i].split(':');
+				values[pair[0]] = pair[1];
+				document.getElementById(pair[0]).innerHTML = pair[1]
+			}
+		}
+		xhttp.open("GET", "getValues", true);
+		xhttp.send();
+	}
+
+</script>
