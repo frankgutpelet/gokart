@@ -5,7 +5,7 @@
 	<link rel="stylesheet" style="text/css">
 <meta content="de" http-equiv="Content-Language" />
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-<title>Embedded Template</title>
+<title>GoKart</title>
 <style type="text/css">
 	.button {
 	  display: inline-block;
@@ -16,7 +16,7 @@
 	  text-decoration: none;
 	  outline: none;
 	  color: #fff;
-	  background-color: silver;
+	  background-color: red;
 	  border: none;
 	  border-radius: 10px;
 	  box-shadow: 0 9px black;
@@ -24,20 +24,29 @@
 </style>
 
 <body>
-	<h1>Embedded Template</h1>
+	<h1>GoKart</h1>
 	<table style="width: 100%">
 		<tr>
-			<td><strong>From c++: </strong></td>
-			<td><strong id="dynamicVariable"></strong></td>
+			<td><strong>minValue: </strong></td>
+			<td><strong id="minValue"></strong></td>
 		</tr>
 		<tr>
-			<td><strong>To c++: </strong></td>
-			<td><input type="text" id="dynamicVariable2"onchange="updateDynamicVariable2()"></strong></td>
+			<td><strong>maxValue: </strong></td>
+			<td><strong id="maxValue"></strong></td>
+		</tr>
+		<tr>
+			<form action="submit" method="post" id="calibrate">
+					<button id="calibrateBtn" type="submit" name="action" value="">Kalibrieren</button>
+			</form>
+		</tr>
+		<tr>
 			<td>
-				<form action="submit" method="post" >
-					<button class="button" id="submitBtn" type="submit" name="action" value="" >übernehmen</button>
-				</form>
+				<p class="auto-style2">Gas</p>
+					<div class="slidecontainer">
+						<input id="sliderTrottle" type="range" min="0" max="255" value=0 class="slider" id="temp" >
+					</div>
 			</td>
+		</p>
 		</tr>
 	</table>
 </body>
@@ -46,12 +55,14 @@
 <script>
 	var values =
 	{
-		"dynamicVariable" : "dynamic",
-		"dynamicVariable2" : "dynamic"
+		"minValue" : "dynamic",
+		"maxValue" : "dynamic",
+		"trottle" : "dynamic",
+		"action" : "dynamic"
 	}
 
 	document.getElementById("dynamicVariable").innerHTML = values.dynamicVariable
-	interval = setInterval(updateValues, 1000)
+	interval = setInterval(updateValues, 100)
 
 	function updateDynamicVariable2()
 	{

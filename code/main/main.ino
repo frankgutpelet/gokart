@@ -5,6 +5,7 @@
 #include "./DNSServer.h"
 #include "base.hpp"
 #include "Logger.hpp"
+#include "EEPROM.h"
 
 const byte        DNS_PORT = 53;          // Capture DNS requests on port 53
 IPAddress         apIP(10, 10, 10, 1); 
@@ -16,10 +17,28 @@ const char* myhostname = "EmbeddedWebTemplate";
 ESP8266WebServer server(80);
 base indexPage(&server);
 Logger* logger = Logger::instance();
+int maxValue;
+int minValue;
+int minValueAdr = 0x00;
+int maxValueAdr = 0x04;
+
+int pwmPin = 16;
+int sensorPin = A0;    // select the input pin for the potentiometer
+int sensorValue = 0;
+os_timer_t Timer1; 
+
+void timerCallback(void *pArg);
 
 void handleSubmit() 
 {
-  logger->Debug(String("Value dynamicVariable2: ") + indexPage.Get_dynamicVariable2());
+  if (String("calibrate") == indexPage.Get_action())
+  {
+    logger->Debug(String("calibrate"));
+    os_timer_disarm (&Timer1);
+    analogWrite(pwmPin, 0);
+    calibrate();
+  }
+  
   Render();
 }
 
@@ -40,11 +59,35 @@ void handleNotFound() {
 
 void Render()
 {
-  indexPage.Set_dynamicVariable("from c++");
   indexPage.Render();
 }
 
-void setup(void) {
+void calibrate()
+{
+ do
+  {
+     maxValue = sensorValue;
+     sensorValue = analogRead(sensorPin);
+     delay(100);
+  }while ((maxValue - 20) < sensorValue);
+  minValue += 10;
+  Serial.println("initialized: minValue" + String(minValue) + " maxValue " + String(maxValue));
+  EEPROM.write(minValueAdr, minValue % 0xFF);
+  EEPROM.write(minValueAdr + 1, minValue / 0xFF);
+  EEPROM.write(maxValueAdr, maxValue % 0xFF);
+  EEPROM.write(maxValueAdr + 1, maxValue % 0xFF);
+  os_timer_arm(&Timer1, 100, true);
+}
+
+
+void setup(void) 
+{
+  pinMode(pwmPin, OUTPUT);
+  analogWrite(pwmPin, 0);
+  minValue = EEPROM.read(minValueAdr) + (EEPROM.read(minValueAdr +1) * 0xFF);
+  maxValue = EEPROM.read(maxValueAdr) + (EEPROM.read(maxValueAdr +1) * 0xFF);
+  os_timer_setfn(&Timer1, timerCallback, NULL);
+  os_timer_arm(&Timer1, 100, true);
  
   Serial.begin(115200);
   WiFi.mode(WIFI_AP);
@@ -60,9 +103,27 @@ void setup(void) {
 
   server.begin();
   Serial.println("HTTP server started");
+  
+  
 }
 
 void loop(void) {
   dnsServer.processNextRequest();
   server.handleClient();
 }
+
+void timerCallback(void *pArg)
+{ 
+    if (minValue <= maxValue)
+    {
+      return;
+    }
+    sensorValue = analogRead(sensorPin);
+    int trottle = (sensorValue - minValue)*255 / (maxValue - minValue);
+    if (0 > trottle)
+    {
+      trottle = 0;
+    }
+    analogWrite(pwmPin, trottle);
+    indexPage.Set_trottle(String(trottle));
+} 
