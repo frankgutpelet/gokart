@@ -76,7 +76,7 @@ void calibrate()
   EEPROM.write(minValueAdr + 1, minValue / 0xFF);
   EEPROM.write(maxValueAdr, maxValue % 0xFF);
   EEPROM.write(maxValueAdr + 1, maxValue % 0xFF);
-  os_timer_arm(&Timer1, 100, true);
+  os_timer_arm(&Timer1, 1000, true);
 }
 
 
@@ -87,7 +87,7 @@ void setup(void)
   minValue = EEPROM.read(minValueAdr) + (EEPROM.read(minValueAdr +1) * 0xFF);
   maxValue = EEPROM.read(maxValueAdr) + (EEPROM.read(maxValueAdr +1) * 0xFF);
   os_timer_setfn(&Timer1, timerCallback, NULL);
-  os_timer_arm(&Timer1, 100, true);
+  os_timer_arm(&Timer1, 1000, true);
  
   Serial.begin(115200);
   WiFi.mode(WIFI_AP);
@@ -103,6 +103,7 @@ void setup(void)
 
   server.begin();
   Serial.println("HTTP server started");
+  logger->Debug(String("Read from EEPROM: minValue: " + String(minValue) + " maxValue: " + String(maxValue)) ); 
   
   
 }
@@ -114,16 +115,11 @@ void loop(void) {
 
 void timerCallback(void *pArg)
 { 
-    if (minValue <= maxValue)
-    {
-      return;
-    }
-    sensorValue = analogRead(sensorPin);
-    int trottle = (sensorValue - minValue)*255 / (maxValue - minValue);
-    if (0 > trottle)
-    {
-      trottle = 0;
-    }
+    long sensorVal = analogRead(sensorPin);
+    sensorVal = ((sensorVal - minValue)<0)?0:sensorVal; 
+    
+    int trottle = sensorVal*255 / (maxValue - minValue);
+    
     analogWrite(pwmPin, trottle);
     indexPage.Set_trottle(String(trottle));
 } 
