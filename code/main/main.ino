@@ -1,5 +1,5 @@
-int maxValue;
-int minValue;
+int maxValue = 400;
+int minValue = 300;
 
 int pwmPin = 16;
 int sensorPin = A0;    // select the input pin for the potentiometer
@@ -23,32 +23,24 @@ void setup(void)
   pinMode(pwmPin, OUTPUT);
   analogWrite(pwmPin, 0);
   Serial.begin(115200);
-  calibrate();
-  
 }
 
 void loop(void)
 { 
     long sensorVal = 0;
     int trottle = 0;
-    int counter = 0;
-    while(1)
-    {
-      counter++;
-      sensorVal = analogRead(sensorPin);
-      sensorVal = ((sensorVal - minValue)<0)?0:sensorVal; 
-      
-      trottle = sensorVal*255 / (maxValue - minValue);
-      if (255 < trottle)
-      {
-        trottle = 255;
-      }
-      analogWrite(pwmPin, trottle);
 
-      if (100 <= counter)
-      {
-        counter = 0;
-        Serial.println(String("SensorVal: ") + sensorVal + ", trottle: " + trottle);
-      }
+    sensorVal = analogRead(sensorPin);
+    if (sensorVal < minValue)
+    {
+      sensorVal = minValue;
+    }   
+    if (sensorVal > maxValue)
+    {
+      sensorVal = maxValue;
     }
+    
+    trottle = 255 - ((sensorVal-minValue)*255 / (maxValue - minValue));
+    analogWrite(pwmPin, trottle);
+
 } 
